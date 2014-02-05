@@ -1,8 +1,21 @@
 <?php
 
 /**
+ * Implements hook_permission()
+ */
+function splash_block_permission() {
+  return array(
+    'administer splash blocks' => array(
+      'title' => t('Administer Splash Block settings'),
+      'description' => t('Allows admins to set the time delay between splashes on a given block.'),
+    ),
+  );
+}
+
+/**
  * Implements hook_system_info_alter()
- * Adds a new "splash" region to the current theme
+ *
+ * Adds a new "splash" region to the current theme.
  */
 function splash_block_system_info_alter(&$info, $file){
   global $custom_theme;    
@@ -16,17 +29,63 @@ function splash_block_system_info_alter(&$info, $file){
 }
 
 /**
+ * Implements hook_form_alter()
+ *
+ * Alter block edit form to add configuration field.
+ */
+function splash_block_form_alter(&$form, &$form_state, $form_id) {
+  if (user_access('administer splash blocks') && ($form_id == 'block_admin_configure' || $form_id == 'block_add_block_form')) {
+    // Load statically cached block object used to display the form.
+    $block = block_load($form['module']['#value'], $form['delta']['#value']);
+
+    $form['settings']['splash_interval'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Splash Interval'),
+      '#default_value' => isset($block->splash_interval) ? $block->splash_interval : '20160',
+      '#description' => t('Time in minutes (whole integers) between splashes. 20160 minutes = 2 weeks.'),
+      '#maxlength' => 255,
+    );
+
+    $form['#submit'][] = 'splash_block_form_submit';
+  }
+}
+
+/**
+ * Helper function: additional submit callback for block configuration pages.
+ *
+ * Save splash interval.
+ */
+function splash_block_form_submit($form, &$form_state) {
+  if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
+    // Only save if value has changed.
+    if (isset($form_state['values']['splash_interval']) && $form['settings']['splash_interval']['#default_value'] != $form_state['values']['splash_interval'] && is_numeric($form_state['values']['splash_interval']) && user_access('administer blocks')) {
+      db_update('block')
+        ->fields(array('splash_interval' => $form_state['values']['splash_interval']))
+        ->condition('module', $form_state['values']['module'])
+        ->condition('delta', $form_state['values']['delta'])
+        ->execute();
+      // Flush all context module cache to use the updated splash_interval.
+      if (module_exists('context')) {
+        cache_clear_all('context', 'cache', TRUE);
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_page_alter()
+ *
+ * Displays any blocks in splash region as lightbox popups.
  */
 function splash_block_page_build(&$page) {
 
-	if (!isset($page['splash'])) {
-		return;
-	}
-	
+  if (!isset($page['splash'])) {
+    return;
+  }
+  
   $path = drupal_get_path('module', 'splash_block');
-	
-	$page['page_bottom']['splash'] = array(
+  
+  $page['page_bottom']['splash'] = array(
     '#attached' => array(),
   );
   $attached = &$page['page_bottom']['splash']['#attached'];
@@ -34,37 +93,38 @@ function splash_block_page_build(&$page) {
 
   $attached['css'][$path . '/splash.css'] = $options;
   $attached['js'][$path . '/splash.js'] = $options;
-	
-	$splash_block = array_shift(array_values($page['splash']));	
-	$bid = $splash_block['#block']->bid;
-	
-	$page['page_bottom']['splash']['#markup'] .= '<div id="splash-content"><div class="block" id="' . $bid . '">' . $splash_block['#markup'] . '</div></div>';
-	
-	drupal_add_js(libraries_get_path('jstorage') . '/jstorage.min.js', array('group' => JS_THEME, 'every_page' => TRUE));
-	drupal_add_js(libraries_get_path('json2') . '/json2.js', array('group' => JS_THEME, 'every_page' => TRUE));
-	drupal_add_js('
-		jQuery(document).ready(function() {
-			jQuery(window).load(function() {
-				jQuery("#splash-content .block").each(
-					function(index) {
-						var id = jQuery(this).attr("id");
-						var value = jQuery.jStorage.get(id);
-						var ttl = jQuery.jStorage.getTTL(id);
+  
+  $splash_block = array_shift(array_values($page['splash'])); 
+  $bid = $splash_block['#block']->bid;
+  $splash_interval = isset($splash_block['#block']->splash_interval) ? (int) $splash_block['#block']->splash_interval : 20160;
+  $splash_interval = $splash_interval * 60000;
+  
+  $page['page_bottom']['splash']['#markup'] .= '<div id="splash-content"><div class="block" id="' . $bid . '">' . $splash_block['#markup'] . '</div></div>';
+  
+  drupal_add_js(libraries_get_path('jstorage') . '/jstorage.min.js', array('group' => JS_THEME, 'every_page' => TRUE));
+  drupal_add_js(libraries_get_path('json2') . '/json2.js', array('group' => JS_THEME, 'every_page' => TRUE));
+  drupal_add_js('
+    jQuery(document).ready(function() {
+      jQuery(window).load(function() {
+        jQuery("#splash-content .block").each(
+          function(index) {
+            var id = jQuery(this).attr("id");
+            var value = jQuery.jStorage.get(id);
+            var ttl = jQuery.jStorage.getTTL(id);
 
-						if(!value || ttl == 0){
-							value = 1;
+            if(!value || ttl == 0){
+              value = 1;
 
-							var splash = jQuery(this).html();
-							modal.open({content: splash, width: "400px"});
+              var splash = jQuery(this).html();
+              modal.open({content: splash, width: "400px"});
 
-							jQuery.jStorage.set(id,value);
-							jQuery.jStorage.setTTL(id,1209600000);
-							// two weeks = 1209600000
-						}
-					}
-				);
-				jQuery("#splash-content").remove();
-			});
-		});
-	', 'inline');
+              jQuery.jStorage.set(id,value);
+              jQuery.jStorage.setTTL(id,' . $splash_interval . ');
+            }
+          }
+        );
+        jQuery("#splash-content").remove();
+      });
+    });
+  ', 'inline');
 }

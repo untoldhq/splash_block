@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the splash_block module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function splash_block_install() {
+  $schema['block'] = array();
+  splash_block_schema_alter($schema);
+  foreach ($schema['block']['fields'] as $field => $spec) {
+    if (db_field_exists('block', $field)) {
+      watchdog('system', 'Module install: Attempt to recreate field: "%field", when it already exists.', array('%field' => $field), WATCHDOG_WARNING);
+    }
+    else {
+      db_add_field('block', $field, $spec);
+    }
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function splash_block_uninstall() {
+  $schema['block'] = array();
+  splash_block_schema_alter($schema);
+  foreach ($schema['block']['fields'] as $field => $specs) {
+    db_drop_field('block', $field);
+  }
+}
+
+/**
+ * Implements hook_schema_alter().
+ */
+function splash_block_schema_alter(&$schema) {
+  if (isset($schema['block'])) {
+    $schema['block']['fields']['splash_interval'] = array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'size' => 'normal',
+      'default' => '20160',
+      'description' => 'Time in minutes until next splash (20160 = 2 weeks)',
+    );
+  }
+}
