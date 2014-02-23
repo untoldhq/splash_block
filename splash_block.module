@@ -178,10 +178,9 @@ function splash_block_page_build(&$page) {
       jQuery(window).load(function() {
         var splashes = new Array();
         ' . $js_array .'
-
+        var splashed = false;
         jQuery("#splash-content .splash-block").each(
           function(index) {
-            var splashed = false;
             if (!splashed) {
               var id = jQuery(this).attr("id");
               var value = jQuery.jStorage.get(id);
