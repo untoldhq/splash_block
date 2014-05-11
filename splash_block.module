@@ -145,6 +145,9 @@ function splash_block_page_build(&$page) {
  * Add splash markup and attachments.
  */
 function _splash_block_add_splashes($splash_region) {
+  // Load jStorage library.
+  $library = libraries_load('jstorage', 'minified');
+
   $splashes = array();
   $settings = array();
 
@@ -180,12 +183,6 @@ function _splash_block_add_splashes($splash_region) {
 
   $js = array();
 
-  // Add jStorage library
-  $js[] = array(
-    'data' => libraries_get_path('jstorage') . '/jstorage.min.js',
-    'type' => 'file',
-  );
-
   // Add jquery.json
   $js[] = array(
     'data' => $path . '/js/jquery.json-2.3.min.js',
@@ -213,4 +210,65 @@ function _splash_block_add_splashes($splash_region) {
   $splashes['#attached']['js'] = $js;
 
   return $splashes;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function splash_block_libraries_info() {
+  $libraries = array();
+
+  $libraries['jstorage'] = array(
+    'name' => 'jStorage library',
+    'vendor url' => 'http://www.jstorage.info/',
+    'download url' => 'https://github.com/andris9/jStorage/zipball/master',
+    'version callback' => '_splash_block_jstorage_version',
+    'version arguments' => array('1','2'),
+    'versions' => array(
+      '1' => array(),
+      '2' => array(),
+    ),
+    'files' => array(
+      'js' => array(
+        'jstorage.js',
+        ),
+    ),
+    'variants' => array(
+      'minified' => array(
+        'files' => array(
+          'js' => array(
+            'jstorage.min.js',
+          ),
+        ),
+        'variant callback' => '_splash_block_test_installed',
+        'variant arguments' => array(),
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Gets the version of jStorage library.
+ */
+function _splash_block_jstorage_version($library, $version) {
+  return $version;
+}
+
+/**
+ * Detects whether the variant is installed or not.
+ *
+ * Determines if the JS file exists.
+ */
+function _splash_block_test_installed($library, $name, $args) {
+  // Make sure the file exists.
+  $path = DRUPAL_ROOT . '/' . $library['library path'] . '/';
+  $file = file_exists($path . 'jstorage.min.js');
+  if (!$file) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
 }
