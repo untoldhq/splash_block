@@ -4,7 +4,7 @@ splashBlockSplash = (function(){
   $overlay,
   $modal,
   $content,
-	$close;
+  $close;
 
   // Generate the HTML and add it to the document.
   $overlay = jQuery('<div id="splash-block-overlay"></div>');
