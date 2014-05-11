@@ -1,66 +1,29 @@
-var modal = (function(){
-	var 
-	method = {},
-	$overlay,
-	$modal,
-	$content,
-	$close;
+(function ($) {
+  Drupal.behaviors.splashBlock = {
+    attach: function (context, settings) {
+      var splashed = false;
+      $.each(Drupal.settings.splashBlock, function() {
+        if (!splashed) {
+          var id = this.id;
+          var value = $.jStorage.get(id);
+          var ttl = $.jStorage.getTTL(id);
 
-	
-	// Generate the HTML and add it to the document
-	$overlay = jQuery('<div id="custom_splash-overlay"></div>');
-	$modal = jQuery('<div id="custom_splash-modal"></div>');
-	$content = jQuery('<div id="custom_splash-splash"></div>');
-	$close = jQuery('<a id="custom_splash-close" href="#">close</a>');
-	
-	// Center the modal in the viewport
-	method.center = function () {
-		var top, left;
+          if (!value || ttl == 0) {
+            value = 1;
 
-		top = Math.max(jQuery(window).height() - $modal.outerHeight(), 0) / 2;
-		left = Math.max(jQuery(window).width() - $modal.outerWidth(), 0) / 2;
+            var splash = $('#' + this.id).clone().wrap('<div>').parent().html();
+            var time = this.time;
+            var width = this.size + 'px';
+            splashBlockSplash.open({content: splash, width: width});
 
-		$modal.css({
-			top:top + jQuery(window).scrollTop(), 
-			left:left + jQuery(window).scrollLeft()
-		});
-	};
+            jQuery.jStorage.set(id,value);
+            jQuery.jStorage.setTTL(id,time);
 
-	// Open the modal
-	method.open = function (settings) {
-		$content.empty().append(settings.content).html();
-
-		$modal.css({
-			width: settings.width || 'auto', 
-			height: settings.height || 'auto'
-		});
-
-		method.center();
-		jQuery(window).bind('resize.modal', method.center);
-		$modal.show();
-		$overlay.show();
-	};
-
-	// Close the modal
-	method.close = function () {
-		$modal.hide();
-		$overlay.hide();
-		$content.empty();
-		jQuery(window).unbind('resize.modal');
-	};
-
-
-	jQuery(document).ready(function(){
-		jQuery('body').append($overlay, $modal);
-		jQuery('#custom_splash-modal').hide();
-		jQuery('#custom_splash-overlay').hide();
-		jQuery('#custom_splash-modal').append($content, $close);
-	});
-
-	$close.click(function(e){
-		e.preventDefault();
-		method.close();
-	});
-
-	return method;
-}());
+            splashed = true;
+          }
+        }
+      });
+      $("#splash-content").remove();
+    }
+  };
+})(jQuery);

@@ -1,4 +1,4 @@
-#custom_splash-overlay {
+#splash-block-overlay {
     position: fixed; 
     top: 0;
     left: 0;
@@ -10,7 +10,7 @@
 	z-index: 9;
 }
 
-#custom_splash-modal {
+#splash-block-modal {
     position:absolute;
     background:url(images/tint20.png) 0 0 repeat;
     background:rgba(0,0,0,0.2);
@@ -19,13 +19,13 @@
 	z-index: 500;
 }
 
-#custom_splash-splash {
+#splash-block-splash {
     border-radius:8px;
     background:#fff;
     padding:10px;
 }
 
-#custom_splash-close {
+#splash-block-close {
     position:absolute;
     background:url(images/close.png) 0 0 no-repeat;
     width:24px;

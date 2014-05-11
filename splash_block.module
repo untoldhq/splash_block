@@ -43,6 +43,7 @@ function splash_block_form_alter(&$form, &$form_state, $form_id) {
     $form['settings']['splash_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Splash Block Settings'),
+      '#description' => t('These settings only apply to blocks placed within the "Splash" region.'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
@@ -124,7 +125,7 @@ function _splash_block_get_settings($module, $delta) {
 }
 
 /**
- * Implements hook_page_alter()
+ * Implements hook_page_build()
  *
  * Displays any blocks in splash region as lightbox popups.
  */
@@ -134,76 +135,82 @@ function splash_block_page_build(&$page) {
     return;
   }
   
+  // Add splashes to page_bottom
+  $page['page_bottom']['splash'] = _splash_block_add_splashes($page['splash']);
+
+  unset($page['splash']);
+}
+
+/**
+ * Add splash markup and attachments.
+ */
+function _splash_block_add_splashes($splash_region) {
+  $splashes = array();
+  $settings = array();
+
   $path = drupal_get_path('module', 'splash_block');
-  
-  $page['page_bottom']['splash'] = array(
-    '#attached' => array(),
-  );
-  $attached = &$page['page_bottom']['splash']['#attached'];
   $options = array('every_page' => TRUE, 'group' => JS_THEME);
 
-  $attached['css'][$path . '/css/splash_block.css'] = $options;
-  $attached['js'][$path . '/js/splash_block.js'] = $options;
+  $splashes['#attached'] = array();
 
-  $page['page_bottom']['splash']['#markup'] = '<div id="splash-content">';
+  $splashes['#attached']['css'][$path . '/css/splash_block_splash.css'] = $options;
+
+  $splashes['#markup'] = '<div id="splash-content">';
   
-  $splashes = array();
-  $js_array = '';
-  foreach ($page['splash'] as $k => $splash) {
+  foreach ($splash_region as $k => $splash) {
     if (isset($splash['#block'])) {
-      $splashes[$k] = _splash_block_get_settings($splash['#block']->module, $splash['#block']->delta);
-      if (!isset($splashes[$k]->time)) {
-        $splashes[$k]->time = 20160;
-      }
-      $splashes[$k]->time *= 60000;
-      if (!isset($splashes[$k]->size)) {
-        $splashes[$k]->size = 450;
-      }
+      $settings[$k] = _splash_block_get_settings($splash['#block']->module, $splash['#block']->delta);
 
-      $page['page_bottom']['splash']['#markup'] .= '<div class="splash-block" id="' . $k . '">' . $splash['#markup'] . '</div>';
-      $js_array .= 'splashes["'. $k . '"] = Array();';
-      $js_array .= 'splashes["'. $k . '"]["time"] = '. $splashes[$k]->time . ';';
-      $js_array .= 'splashes["'. $k . '"]["size"] = '. $splashes[$k]->size . ';';
+      // Handle defaults
+      if (!isset($settings[$k]->time)) {
+        $settings[$k]->time = 20160;
+      }
+      $settings[$k]->time *= 60000;
+      if (!isset($settings[$k]->size)) {
+        $settings[$k]->size = 450;
+      }
+      $settings[$k]->id = 'block-' . str_replace('_', '-', $k);
+
+      // Add block markup
+      $splashes['#markup'] .= drupal_render($splash);
     }
   }
-  unset($page['splash']);
 
-  $page['page_bottom']['splash']['#markup'] .= '</div>';
+  $splashes['#markup'] .= '</div>';
 
-  // TODO --> add Drupal behavior.
-  drupal_add_js(libraries_get_path('jstorage') . '/jstorage.min.js', array('group' => JS_THEME, 'every_page' => TRUE));
-  drupal_add_js(drupal_get_path('module', 'splash_block') . '/js/jquery.json-2.3.min.js', array('group' => JS_THEME, 'every_page' => TRUE));
-  drupal_add_js('
-    jQuery(document).ready(function() {
-      jQuery(window).load(function() {
-        var splashes = new Array();
-        ' . $js_array .'
-        var splashed = false;
-        jQuery("#splash-content .splash-block").each(
-          function(index) {
-            if (!splashed) {
-              var id = jQuery(this).attr("id");
-              var value = jQuery.jStorage.get(id);
-              var ttl = jQuery.jStorage.getTTL(id);
+  $js = array();
 
-              if (!value || ttl == 0) {
-                value = 1;
+  // Add jStorage library
+  $js[] = array(
+    'data' => libraries_get_path('jstorage') . '/jstorage.min.js',
+    'type' => 'file',
+  );
 
-                var splash = jQuery(this).html();
-                var time = splashes[id]["time"];
-                var width = splashes[id]["size"] + "px";
-                modal.open({content: splash, width: width});
+  // Add jquery.json
+  $js[] = array(
+    'data' => $path . '/js/jquery.json-2.3.min.js',
+    'type' => 'file',
+  );
 
-                jQuery.jStorage.set(id,value);
-                jQuery.jStorage.setTTL(id,time);
+  // Add splash_block lightbox
+  $js[] = array(
+    'data' => $path . '/js/splash_block_splash.js',
+    'type' => 'file',
+  );
 
-                splashed = true;
-              }
-            }
-          }
-        );
-        jQuery("#splash-content").remove();
-      });
-    });
-  ', 'inline');
+  // Send settings to Drupal js
+  $js[] = array(
+    'data' => array('splashBlock' => $settings),
+    'type' => 'setting',
+  );
+
+  // Add js to launch splashes
+  $js[] = array(
+    'data' => $path . '/js/splash_block.js',
+    'type' => 'file',
+  );
+
+  $splashes['#attached']['js'] = $js;
+
+  return $splashes;
 }
