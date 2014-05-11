@@ -189,12 +189,6 @@ function _splash_block_add_splashes($splash_region) {
 
   $js = array();
 
-  // Add jquery.json
-  $js[] = array(
-    'data' => $path . '/js/jquery.json-2.3.min.js',
-    'type' => 'file',
-  );
-
   // Add splash_block lightbox
   $js[] = array(
     'data' => $path . '/js/splash_block_splash.js',
