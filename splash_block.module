@@ -27,7 +27,7 @@ function splash_block_permission() {
  */
 function splash_block_system_info_alter(&$info, $file) {
   // Adds a splash region to all available themes.
-  // Add to all in case people are want splashes on admin_theme, or are 
+  // Add to all in case people are want splashes on admin_theme, or are
   // using some theme-switching tool.
   if (isset($info['regions'])) {
     $info['regions'] = array_merge($info['regions'], array('splash' => t('Splash')));
@@ -78,16 +78,16 @@ function splash_block_form_alter(&$form, &$form_state, $form_id) {
  */
 function splash_block_form_validate($form, &$form_state) {
   if (empty($form_state['values']['splash_time'])) {
-    form_set_error('splash_time', t('Please enter a value for your splash block\'s time interval.'));
+    form_set_error('splash_time', t("Please enter a value for your splash block's time interval."));
   }
   if (empty($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t('Please enter a value for your splash block\'s width.'));
+    form_set_error('splash_size', t("Please enter a value for your splash block's width."));
   }
   if (!is_numeric($form_state['values']['splash_time'])) {
-    form_set_error('splash_time', t('Time interval must be numeric.'));
+    form_set_error('splash_time', t("Time interval must be numeric."));
   }
   if (!is_numeric($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t('Time interval must be numeric.'));
+    form_set_error('splash_size', t("Time interval must be numeric."));
   }
 }
 
@@ -230,7 +230,7 @@ function splash_block_libraries_info() {
     'files' => array(
       'js' => array(
         'jstorage.js',
-        ),
+      ),
     ),
     'variants' => array(
       'minified' => array(
