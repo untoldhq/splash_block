@@ -6,11 +6,11 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function splash_block_schema() {
   $schema['splash_block'] = array(
-    'description' => t('Splash block individual settings. Connects interval and size to a specific block id'),
+    'description' => 'Splash block individual settings. Connects interval and size to a specific block id',
     'fields' => array(
       'module' => array(
         'type' => 'varchar',
@@ -27,14 +27,14 @@ function splash_block_schema() {
         'description' => 'Unique ID for block within a module.',
       ),
       'time' => array(
-        'description' => t('The time inteval in minutes between splashes'),
+        'description' => 'The time inteval in minutes between splashes',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
       ),
       'size' => array(
-        'description' => t('The width of the splash, in pixels'),
+        'description' => 'The width of the splash, in pixels',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,

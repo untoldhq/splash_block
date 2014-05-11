@@ -4,12 +4,12 @@
  * @file
  * Splash Block module functionality.
  *
- * Contains the bulk of Splash Block functionality, including permissions, settings, 
- * generation, and display of Splash Blocks.
+ * Contains the bulk of Splash Block functionality, including permissions, 
+ * settings, generation, and display of Splash Blocks.
  */
 
 /**
- * Implements hook_permission()
+ * Implements hook_permission().
  */
 function splash_block_permission() {
   return array(
@@ -21,21 +21,21 @@ function splash_block_permission() {
 }
 
 /**
- * Implements hook_system_info_alter()
+ * Implements hook_system_info_alter().
  *
  * Adds a new "splash" region to the current theme.
  */
 function splash_block_system_info_alter(&$info, $file) {
   // Adds a splash region to all available themes.
-  // Add to all in case people are want splashes on admin_theme, or are using some
-  // theme-switching tool.
+  // Add to all in case people are want splashes on admin_theme, or are 
+  // using some theme-switching tool.
   if (isset($info['regions'])) {
-    $info['regions'] = array_merge($info['regions'],  array('splash' => t('Splash')));
+    $info['regions'] = array_merge($info['regions'], array('splash' => t('Splash')));
   }
 }
 
 /**
- * Implements hook_form_alter()
+ * Implements hook_form_alter().
  *
  * Alter block edit form to add configuration field.
  */
@@ -97,13 +97,12 @@ function splash_block_form_validate($form, &$form_state) {
 function splash_block_form_submit($form, &$form_state) {
   if (($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') && user_access('administer blocks')) {
     // Only save if at least one field has changed.
-    // TODO --> make sure people can reset values to the defaults if they want!
     if (($form['settings']['splash_block']['splash_time']['#default_value'] != $form_state['values']['splash_time']) || ($form['settings']['splash_block']['splash_size']['#default_value'] != $form_state['values']['splash_size'])) {
       db_merge('splash_block')
         ->key(array('module' => $form_state['values']['module'], 'delta' => $form_state['values']['delta']))
         ->fields(array(
           'time' => $form_state['values']['splash_time'],
-          'size' => $form_state['values']['splash_size']
+          'size' => $form_state['values']['splash_size'],
           ))
         ->execute();
 
@@ -119,7 +118,7 @@ function splash_block_form_submit($form, &$form_state) {
  * Returns saved settings for a given block.
  */
 function _splash_block_get_settings($module, $delta) {
-  $query = db_query('SELECT module, delta, time, size FROM {splash_block} WHERE module = :module AND delta = :delta', 
+  $query = db_query('SELECT module, delta, time, size FROM {splash_block} WHERE module = :module AND delta = :delta',
     array(
       ':module' => $module,
       ':delta' => $delta,
@@ -131,7 +130,7 @@ function _splash_block_get_settings($module, $delta) {
 }
 
 /**
- * Implements hook_page_build()
+ * Implements hook_page_build().
  *
  * Displays any blocks in splash region as lightbox popups.
  */
@@ -140,8 +139,8 @@ function splash_block_page_build(&$page) {
   if (!isset($page['splash'])) {
     return;
   }
-  
-  // Add splashes to page_bottom
+
+  // Add splashes to page_bottom.
   $page['page_bottom']['splash'] = _splash_block_add_splashes($page['splash']);
 
   unset($page['splash']);
@@ -152,7 +151,7 @@ function splash_block_page_build(&$page) {
  */
 function _splash_block_add_splashes($splash_region) {
   // Load jStorage library.
-  $library = libraries_load('jstorage', 'minified');
+  libraries_load('jstorage', 'minified');
 
   $splashes = array();
   $settings = array();
@@ -165,12 +164,12 @@ function _splash_block_add_splashes($splash_region) {
   $splashes['#attached']['css'][$path . '/css/splash_block_splash.css'] = $options;
 
   $splashes['#markup'] = '<div id="splash-content">';
-  
+
   foreach ($splash_region as $k => $splash) {
     if (isset($splash['#block'])) {
       $settings[$k] = _splash_block_get_settings($splash['#block']->module, $splash['#block']->delta);
 
-      // Handle defaults
+      // Handle defaults.
       if (!isset($settings[$k]->time)) {
         $settings[$k]->time = 20160;
       }
@@ -180,7 +179,7 @@ function _splash_block_add_splashes($splash_region) {
       }
       $settings[$k]->id = 'block-' . str_replace('_', '-', $k);
 
-      // Add block markup
+      // Add block markup.
       $splashes['#markup'] .= drupal_render($splash);
     }
   }
@@ -189,19 +188,19 @@ function _splash_block_add_splashes($splash_region) {
 
   $js = array();
 
-  // Add splash_block lightbox
+  // Add splash_block lightbox.
   $js[] = array(
     'data' => $path . '/js/splash_block_splash.js',
     'type' => 'file',
   );
 
-  // Send settings to Drupal js
+  // Send settings to Drupal js.
   $js[] = array(
     'data' => array('splashBlock' => $settings),
     'type' => 'setting',
   );
 
-  // Add js to launch splashes
+  // Add js to launch splashes.
   $js[] = array(
     'data' => $path . '/js/splash_block.js',
     'type' => 'file',

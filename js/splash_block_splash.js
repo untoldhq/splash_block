@@ -1,5 +1,5 @@
 splashBlockSplash = (function(){
-	var 
+	var
 	method = {},
 	$overlay,
 	$modal,
@@ -20,7 +20,7 @@ splashBlockSplash = (function(){
 		left = Math.max(jQuery(window).width() - $modal.outerWidth(), 0) / 2;
 
 		$modal.css({
-			top:top + jQuery(window).scrollTop(), 
+			top:top + jQuery(window).scrollTop(),
 			left:left + jQuery(window).scrollLeft()
 		});
 	};
@@ -33,7 +33,7 @@ splashBlockSplash = (function(){
 		$content.empty().append(settings.content).html();
 
 		$modal.css({
-			width: settings.width || 'auto', 
+			width: settings.width || 'auto',
 			height: settings.height || 'auto'
 		});
 

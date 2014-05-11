@@ -1,4 +1,4 @@
- <?php
+<?php
 
 /**
  * @file
@@ -73,10 +73,6 @@ function drush_splash_block_sb_get_jstorage($path = 'sites/all/libraries') {
 
   $filename = basename(JSTORAGE_DOWNLOAD_URI);
 
-  // Remove any existing jStorage library directory.
-  if (is_dir($dirname)) {
-    drush_log(dt('An existing jStorage library was overwritten at @path', array('@path' => $path)), 'notice');
-  }
   // Remove any existing jStorage library zip archive.
   if (is_file($filename)) {
     drush_op('unlink', $filename);
