@@ -1,6 +1,14 @@
 <?php
 
 /**
+ * @file
+ * Splash Block module functionality.
+ *
+ * Contains the bulk of Splash Block functionality, including permissions, settings, 
+ * generation, and display of Splash Blocks.
+ */
+
+/**
  * Implements hook_permission()
  */
 function splash_block_permission() {
@@ -17,15 +25,13 @@ function splash_block_permission() {
  *
  * Adds a new "splash" region to the current theme.
  */
-function splash_block_system_info_alter(&$info, $file){
-  global $custom_theme;    
- 
-  // If non-default theme configuration has been selected, set the custom theme.
-  $custom_theme = isset ($theme) ? $theme : variable_get('theme_default', 'bartik');
- 
-  if ($file->name == $custom_theme){
+function splash_block_system_info_alter(&$info, $file) {
+  // Adds a splash region to all available themes.
+  // Add to all in case people are want splashes on admin_theme, or are using some
+  // theme-switching tool.
+  if (isset($info['regions'])) {
     $info['regions'] = array_merge($info['regions'],  array('splash' => t('Splash')));
-  } 
+  }
 }
 
 /**
@@ -223,7 +229,7 @@ function splash_block_libraries_info() {
     'vendor url' => 'http://www.jstorage.info/',
     'download url' => 'https://github.com/andris9/jStorage/zipball/master',
     'version callback' => '_splash_block_jstorage_version',
-    'version arguments' => array('1','2'),
+    'version arguments' => array('1', '2'),
     'versions' => array(
       '1' => array(),
       '2' => array(),
