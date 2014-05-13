@@ -70,7 +70,6 @@ function splash_block_requirements($phase) {
     $installed = ($jstorage && !empty($jstorage['installed']));
 
     if ($installed) {
-      // Check PHPMailer file integrity.
       $path = DRUPAL_ROOT . '/' . $jstorage['library path'] . '/';
 
       $file_integrity = file_exists($path . 'jstorage.min.js');

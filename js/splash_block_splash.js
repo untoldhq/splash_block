@@ -56,5 +56,9 @@ splashBlockSplash = (function(){
     method.close();
   });
 
+  $overlay.click(function(){
+    method.close();
+  });
+
   return method;
 }());
