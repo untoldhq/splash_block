@@ -169,6 +169,12 @@ function _splash_block_add_splashes($splash_region) {
     if (isset($splash['#block'])) {
       $settings[$k] = _splash_block_get_settings($splash['#block']->module, $splash['#block']->delta);
 
+      // If a block has no saved splash_block settings, create settings
+      // as an empty Object so we can assign defaults.
+      if (empty($setting[$k])) {
+        $settings[$k] = new stdClass();
+      }
+
       // Handle defaults.
       if (!isset($settings[$k]->time)) {
         $settings[$k]->time = 20160;

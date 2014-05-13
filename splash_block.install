@@ -48,14 +48,6 @@ function splash_block_schema() {
 }
 
 /**
- * Implements hook_uninstall().
- */
-function splash_block_uninstall() {
-  // Remove tables.
-  drupal_uninstall_schema('splash_block');
-}
-
-/**
  * Implements hook_requirements().
  *
  * Make sure the jStorage library is installed on the site.
