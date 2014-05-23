@@ -171,7 +171,7 @@ function _splash_block_add_splashes($splash_region) {
 
       // If a block has no saved splash_block settings, create settings
       // as an empty Object so we can assign defaults.
-      if (empty($setting[$k])) {
+      if (empty($settings[$k])) {
         $settings[$k] = new stdClass();
       }
 
