@@ -13,13 +13,19 @@
 
             var splash = $('#' + this.id).clone().wrap('<div>').parent().html();
             var time = this.time;
+            var delay = this.delay;
             var width = this.size + 'px';
-            splashBlockSplash.open({content: splash, width: width});
+            setTimeout(function() {
+              splashBlockSplash.open({
+                content: splash,
+                width: width
+              });
 
-            jQuery.jStorage.set(id,value);
-            jQuery.jStorage.setTTL(id,time);
+              $.jStorage.set(id,value);
+              $.jStorage.setTTL(id,time);
 
-            splashed = true;
+              splashed = true;
+            }, delay);
           }
         }
       });

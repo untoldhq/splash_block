@@ -33,6 +33,13 @@ function splash_block_schema() {
         'unsigned' => TRUE,
         'default' => 0,
       ),
+      'delay' => array(
+        'description' => 'The time delay in seconds after the page loads',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
       'size' => array(
         'description' => 'The width of the splash, in pixels',
         'type' => 'int',
@@ -86,4 +93,20 @@ function splash_block_requirements($phase) {
   }
 
   return $requirements;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add delay field to {splash_block} table.
+ */
+function splash_block_update_7100() {
+  $spec = array(
+    'type' => 'int',
+    'description' => "The time delay in seconds after the page loads",
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('splash_block', 'delay', $spec);
 }
