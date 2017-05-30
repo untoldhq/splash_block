@@ -8,6 +8,7 @@
   opacity: 0.5;
   filter: alpha(opacity=50);
   z-index: 9;
+  display: none;
 }
 
 #splash-block-modal {
@@ -19,7 +20,7 @@
   z-index: 500;
 }
 
-#splash-block-splash {
+#splash-block-splash, .modal-content {
   border-radius: 8px;
   background: #fff;
   padding: 10px;
@@ -34,4 +35,22 @@
   text-indent: -9999px;
   top: -7px;
   right: -7px;
+}
+
+.vertical-alignment-helper {
+  display:table;
+  height: 100%;
+  width: 100%;
+}
+.vertical-align-center {
+  /* To center vertically */
+  display: table-cell;
+  vertical-align: middle;
+}
+.modal-content {
+  /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+  width:inherit;
+  height:inherit;
+  /* To center horizontally */
+  margin: 0 auto;
 }
