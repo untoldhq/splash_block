@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
   Drupal.behaviors.splashBlock = {
     attach: function (context, settings) {
       var splashed = false;
