@@ -112,7 +112,6 @@ function splash_block_form_alter(&$form, &$form_state, $form_id) {
       '#maxlength' => 255,
     );
 
-
     $form['#validate'][] = 'splash_block_form_validate';
     $form['#submit'][] = 'splash_block_form_submit';
   }
