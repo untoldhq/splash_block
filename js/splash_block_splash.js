@@ -6,39 +6,33 @@ splashBlockSplash = (function(){
   $content,
   $close;
 
-  // Generate the HTML and add it to the document.
-  $overlay = jQuery('<div id="splash-block-overlay"></div>');
-  $modal = jQuery('<div id="splash-block-modal"></div>');
-  $content = jQuery('<div id="splash-block-splash"></div>');
-  $close = jQuery('<a id="splash-block-close" href="#">close</a>');
+  // Create variables for divs created in block--splash.tpl.php
+  $overlay = jQuery('#splash-block-overlay');
+  $modal = jQuery('#splash-block-modal');
+  $content = jQuery('#splash-block-splash');
+  $close = jQuery('#splash-block-close');
 
   // Center the modal in the viewport.
-  method.center = function () {
+  method.center = function ($el) {
     var top, left;
+    top = Math.max(jQuery(window).height() - $el.outerHeight(), 0) / 2;
+    left = Math.max(jQuery(window).width() - $el.outerWidth(), 0) / 2;
 
-    top = Math.max(jQuery(window).height() - $modal.outerHeight(), 0) / 2;
-    left = Math.max(jQuery(window).width() - $modal.outerWidth(), 0) / 2;
-
-    $modal.css({
-      top:top + jQuery(window).scrollTop(),
-      left:left + jQuery(window).scrollLeft()
+    $el.css({
+      "top":top + jQuery(window).scrollTop(),
+      "left":left + jQuery(window).scrollLeft()
     });
   };
 
   // Open the modal.
   method.open = function (settings) {
-    jQuery('body').append($overlay, $modal);
-    $modal.append($content, $close);
-
-    $content.empty().append(settings.content).html();
-
     $modal.css({
-      width: settings.width || 'auto',
-      height: settings.height || 'auto'
+      "width": settings.width || 'auto',
+      "height": settings.height || 'auto'
     });
 
-    method.center();
-    jQuery(window).bind('resize.modal', method.center);
+    method.center($modal);
+    jQuery(window).bind('resize.modal', method.center($modal));
     $modal.show();
     $overlay.show();
   };
