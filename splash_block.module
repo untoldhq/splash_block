@@ -1,10 +1,47 @@
 <?php
 
 /**
+ * Implements hook_menu().
+ */
+function splash_block_menu() {
+  $items = array();
+
+  $items['admin/config/splash-block'] = array(
+    'title' => 'Splash Block',
+    'access arguments' => array('administer splash blocks'),
+    'type' => MENU_LOCAL_TASK
+  );
+  $items['admin/config/splash-block/settings'] = array(
+    'title' => 'Splash Block settings',
+    'weight' => 1,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_splash_block_config'),
+    'access arguments' => array('administer splash blocks'),
+    'type' => MENU_NORMAL_ITEM
+  );
+
+  return $items;
+}
+
+function _splash_block_config($form, &$form_state) {
+  $form = array();
+
+  $form['splash_block_js'] = array(
+    '#type' => 'radios',
+    '#title' => t('Popup method'),
+    '#options' => _splash_block_js_options(),
+    '#description' => t('Choose how javascript will load the splash/modal. <strong>Note:</strong> choose Bootstrap only if your theme will be loading the appropriate Bootstrap javascript files.'),
+    '#default_value' => variable_get('splash_block_js', 0),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
  * @file
  * Splash Block module functionality.
  *
- * Contains the bulk of Splash Block functionality, including permissions, 
+ * Contains the bulk of Splash Block functionality, including permissions,
  * settings, generation, and display of Splash Blocks.
  */
 
@@ -149,7 +186,6 @@ function _splash_block_get_settings($module, $delta) {
  * Displays any blocks in splash region as lightbox popups.
  */
 function splash_block_page_build(&$page) {
-
   if (!isset($page['splash'])) {
     return;
   }
@@ -177,7 +213,7 @@ function _splash_block_add_splashes($splash_region) {
 
   $splashes['#attached']['css'][$path . '/css/splash_block_splash.css'] = $options;
 
-  $splashes['#markup'] = '<div id="splash-content">';
+  $splashes['#markup'] = '';
 
   foreach ($splash_region as $k => $splash) {
     if (isset($splash['#block'])) {
@@ -208,7 +244,7 @@ function _splash_block_add_splashes($splash_region) {
     }
   }
 
-  $splashes['#markup'] .= '</div>';
+  $settings['splash_block_js'] = variable_get('splash_block_js', 0);
 
   $js = array();
 
@@ -216,6 +252,7 @@ function _splash_block_add_splashes($splash_region) {
   $js[] = array(
     'data' => $path . '/js/splash_block_splash.js',
     'type' => 'file',
+    'scope' => 'footer',
   );
 
   // Send settings to Drupal js.
@@ -228,11 +265,19 @@ function _splash_block_add_splashes($splash_region) {
   $js[] = array(
     'data' => $path . '/js/splash_block.js',
     'type' => 'file',
+    'scope' => 'footer',
   );
 
   $splashes['#attached']['js'] = $js;
 
   return $splashes;
+}
+
+function _splash_block_js_options() {
+  return array(
+    0 => t('Splash Block javascript'),
+    1 => t('Bootstrap 2/3 modal'),
+  );
 }
 
 /**
@@ -293,5 +338,36 @@ function _splash_block_test_installed($library, $name, $args) {
   }
   else {
     return TRUE;
+  }
+}
+
+/**
+ * Implements hook_preprocess_block
+ * This hook is typically called by a theme, but can be called by a module
+ */
+function splash_block_preprocess_block(&$variables){
+  // add a variable available in the template if the block is in the "splash" region
+  if (isset($variables['theme_hook_suggestions'])) {
+    foreach ($variables['theme_hook_suggestions'] as $k => $v) {
+      if ($v == 'block__splash') {
+        $variables['splash_block_js'] = variable_get('splash_block_js', 0);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ * We use this so the template(s) located in this module are loaded
+ */
+function splash_block_theme_registry_alter(&$theme_registry) {
+  $module_path = drupal_get_path('module', 'splash_block');
+  $template_file_objects = drupal_find_theme_templates($theme_registry, '.tpl.php', $module_path);
+  foreach ($template_file_objects as $key => $template_file_object) {
+    if (!isset($theme_registry[$key]['theme path']) || !preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
+      $theme_registry[$key]['theme path'] = $module_path;
+      $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
+      $theme_registry[$key]['type'] = 'module';
+    }
   }
 }

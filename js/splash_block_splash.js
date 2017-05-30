@@ -1,4 +1,4 @@
-splashBlockSplash = (function($) {
+splashBlockSplash = (function(){
   var
   method = {},
   $overlay,
@@ -6,59 +6,53 @@ splashBlockSplash = (function($) {
   $content,
   $close;
 
-  // Generate the HTML and add it to the document.
-  $overlay = $('<div id="splash-block-overlay"></div>');
-  $modal = $('<div id="splash-block-modal"></div>');
-  $content = $('<div id="splash-block-splash"></div>');
-  $close = $('<a id="splash-block-close" href="#">close</a>');
+  // Create variables for divs created in block--splash.tpl.php
+  $overlay = jQuery('#splash-block-overlay');
+  $modal = jQuery('#splash-block-modal');
+  $content = jQuery('#splash-block-splash');
+  $close = jQuery('#splash-block-close');
 
   // Center the modal in the viewport.
-  method.center = function () {
+  method.center = function ($el) {
     var top, left;
+    top = Math.max(jQuery(window).height() - $el.outerHeight(), 0) / 2;
+    left = Math.max(jQuery(window).width() - $el.outerWidth(), 0) / 2;
 
-    top = Math.max($(window).height() - $modal.outerHeight(), 0) / 2;
-    left = Math.max($(window).width() - $modal.outerWidth(), 0) / 2;
-
-    $modal.css({
-      top: top + $(window).scrollTop(),
-      left: left + $(window).scrollLeft()
+    $el.css({
+      "top":top + jQuery(window).scrollTop(),
+      "left":left + jQuery(window).scrollLeft()
     });
   };
 
   // Open the modal.
-  method.open = function(settings) {
-    $('body').append($overlay, $modal);
-    $modal.append($content, $close);
-
-    $content.empty().append(settings.content).html();
-
+  method.open = function (settings) {
     $modal.css({
-      width: settings.width || 'auto',
-      height: settings.height || 'auto'
+      "width": settings.width || 'auto',
+      "height": settings.height || 'auto'
     });
 
-    method.center();
-    $(window).bind('resize.splashBlock', method.center);
+    method.center($modal);
+    jQuery(window).bind('resize.modal', method.center($modal));
     $modal.show();
     $overlay.show();
   };
 
   // Close the modal.
-  method.close = function() {
+  method.close = function () {
     $modal.hide();
     $overlay.hide();
     $content.empty();
-    $(window).unbind('resize.splashBlock');
+    jQuery(window).unbind('resize.modal');
   };
 
-  $close.click(function(e) {
+  $close.click(function(e){
     e.preventDefault();
     method.close();
   });
 
-  $overlay.click(function() {
+  $overlay.click(function(){
     method.close();
   });
 
   return method;
-}(jQuery));
+}());
