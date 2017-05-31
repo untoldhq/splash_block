@@ -1,7 +1,10 @@
-<div id="splash-block-overlay"></div>
-<div id="splash-block-modal">
-  <div id="splash-block-splash">
-    <?php echo $elements['#markup']; ?>
+<div class="splash-block-overlay"></div>
+<div class="splash-block-modal">
+  <div class="splash-block-splash">
+    <?php if (!empty($elements['#block']->title)): ?>
+      <h4 class="custom-modal-title"><?php print $elements['#block']->title; ?></h4>
+    <?php endif; ?>
+    <?php print $elements['#markup']; ?>
   </div>
-  <a id="splash-block-close" href="#">close</a>
+  <a class="splash-block-close" href="#">close</a>
 </div>

@@ -7,10 +7,10 @@ splashBlockSplash = (function($) {
   $close;
 
   // Generate the HTML and add it to the document.
-  $overlay = $('#splash-block-overlay');
-  $modal = $('#splash-block-modal');
-  $content = $('#splash-block-splash');
-  $close = $('#splash-block-close');
+  $overlay = $('.splash-block-overlay');
+  $modal = $('.splash-block-modal');
+  $content = $('.splash-block-splash');
+  $close = $('.splash-block-close');
 
   // Center the modal in the viewport.
   method.center = function($el) {
