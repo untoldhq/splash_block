@@ -1,4 +1,4 @@
-#splash-block-overlay {
+.splash-block-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +11,7 @@
   display: none;
 }
 
-#splash-block-modal {
+.splash-block-modal {
   position: absolute;
   background: url(images/tint20.png) 0 0 repeat;
   background: rgba(0,0,0,0.2);
@@ -20,13 +20,13 @@
   z-index: 500;
 }
 
-#splash-block-splash, .modal-content {
+.splash-block-splash, .modal-content {
   border-radius: 8px;
   background: #fff;
   padding: 10px;
 }
 
-#splash-block-close {
+.splash-block-close {
   position: absolute;
   background: url(images/close.png) 0 0 no-repeat;
   width: 24px;
@@ -42,11 +42,13 @@
   height: 100%;
   width: 100%;
 }
+
 .vertical-align-center {
   /* To center vertically */
   display: table-cell;
   vertical-align: middle;
 }
+
 .modal-content {
   /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
   width:inherit;
