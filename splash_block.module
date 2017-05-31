@@ -186,7 +186,6 @@ function _splash_block_get_settings($module, $delta) {
  * Displays any blocks in splash region as lightbox popups.
  */
 function splash_block_page_build(&$page) {
-
   if (!isset($page['splash'])) {
     return;
   }
@@ -249,12 +248,14 @@ function _splash_block_add_splashes($splash_region) {
 
   $js = array();
 
-  // Add splash_block lightbox.
-  $js[] = array(
-    'data' => $path . '/js/splash_block_splash.js',
-    'type' => 'file',
-    'scope' => 'footer',
-  );
+  // Add splash_block lightbox if custom is chosen.
+  if ($settings['splash_block_js'] == 'custom') {
+    $js[] = array(
+      'data' => $path . '/js/splash_block_splash.js',
+      'type' => 'file',
+      'scope' => 'footer',
+    );
+  }
 
   // Send settings to Drupal js.
   $js[] = array(
