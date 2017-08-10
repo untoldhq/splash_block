@@ -110,3 +110,17 @@ function splash_block_update_7100() {
   );
   db_add_field('splash_block', 'delay', $spec);
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add bootstrap_size to {splash_block} table.
+ */
+function splash_block_update_7101() {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 16,
+    'description' => "The Bootstrap class name for modal size",
+  );
+  db_add_field('splash_block', 'bootstrap_size', $spec);
+}
