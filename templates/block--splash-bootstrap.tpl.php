@@ -4,7 +4,7 @@ $has_title = empty($elements['#block']->title) ? FALSE : TRUE;
 ?>
 <div class="splash-content modal fade" tabindex="-1" role="dialog" <?php if ($has_title) print 'aria-labelledby="splash-block-' . $block_id . '"'; ?>>
   <div class="vertical-alignment-helper">
-    <div class="modal-dialog vertical-align-center" role="document">
+    <div class="modal-dialog <?php if ($modal_size) echo "$modal_size "; ?>vertical-align-center" role="document">
       <div class="modal-content splash-block">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

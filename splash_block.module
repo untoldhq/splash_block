@@ -104,12 +104,32 @@ function splash_block_form_alter(&$form, &$form_state, $form_id) {
       '#description' => t('Delay (in seconds) after the page loads.'),
       '#maxlength' => 255,
     );
+    if (variable_get('splash_block_js', 'custom') == 'bootstrap') {
+      $bootstrap_modal_size_access = TRUE;
+      $custom_modal_size_access = FALSE;
+    } else {
+      $bootstrap_modal_size_access = FALSE;
+      $custom_modal_size_access = TRUE;
+    }
+    $modal_size_options = array(
+      'default' => 'Default',
+      'modal-sm' => 'Small modal',
+      'modal-lg' => 'Large modal',
+    );
+    $form['settings']['splash_block']['bootstrap_modal_size'] = array(
+      '#type' => 'radios',
+      '#title' => t('Bootstrap modal size'),
+      '#options' => $modal_size_options,
+      '#default_value' => (isset($splash_block->bootstrap_size) && !is_null($splash_block->bootstrap_size)) ? $splash_block->bootstrap_size : 'default',
+      '#access' => $bootstrap_modal_size_access,
+    );
     $form['settings']['splash_block']['splash_size'] = array(
       '#type' => 'textfield',
       '#title' => t('Splash Width'),
       '#default_value' => isset($splash_block->size) ? $splash_block->size : '450',
       '#description' => t('Width (in pixels) of the splash block.'),
       '#maxlength' => 255,
+      '#access' => $custom_modal_size_access,
     );
 
     $form['#validate'][] = 'splash_block_form_validate';
@@ -127,17 +147,19 @@ function splash_block_form_validate($form, &$form_state) {
   if (empty($form_state['values']['splash_delay']) && $form_state['values']['splash_delay'] != 0) {
     form_set_error('splash_delay', t("Please enter a value for your splash block's delay after page load."));
   }
-  if (empty($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t("Please enter a value for your splash block's width."));
+  if (variable_get('splash_block_js', 'custom') == 'custom') {
+    if (empty($form_state['values']['splash_size'])) {
+      form_set_error('splash_size', t("Please enter a value for your splash block's width."));
+    }
+    if (!is_numeric($form_state['values']['splash_size'])) {
+      form_set_error('splash_size', t("Splash size must be numeric."));
+    }
   }
   if (!is_numeric($form_state['values']['splash_time'])) {
     form_set_error('splash_time', t("Time interval must be numeric."));
   }
   if (!is_numeric($form_state['values']['splash_delay'])) {
     form_set_error('splash_delay', t("Time delay must be numeric."));
-  }
-  if (!is_numeric($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t("Splash size must be numeric."));
   }
 }
 
@@ -147,13 +169,14 @@ function splash_block_form_validate($form, &$form_state) {
 function splash_block_form_submit($form, &$form_state) {
   if (($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') && user_access('administer blocks')) {
     // Only save if at least one field has changed.
-    if (($form['settings']['splash_block']['splash_time']['#default_value'] != $form_state['values']['splash_time']) || ($form['settings']['splash_block']['splash_size']['#default_value'] != $form_state['values']['splash_size']) || ($form['settings']['splash_block']['splash_delay']['#default_value'] != $form_state['values']['splash_delay'])) {
+    if (($form['settings']['splash_block']['splash_time']['#default_value'] != $form_state['values']['splash_time']) || ($form['settings']['splash_block']['splash_size']['#default_value'] != $form_state['values']['splash_size']) || ($form['settings']['splash_block']['splash_delay']['#default_value'] != $form_state['values']['splash_delay']) || ($form['settings']['splash_block']['bootstrap_modal_size']['#default_value'] != $form_state['values']['bootstrap_modal_size'])) {
       db_merge('splash_block')
         ->key(array('module' => $form_state['values']['module'], 'delta' => $form_state['values']['delta']))
         ->fields(array(
           'time' => $form_state['values']['splash_time'],
           'delay' => $form_state['values']['splash_delay'],
           'size' => $form_state['values']['splash_size'],
+          'bootstrap_size' => $form_state['values']['bootstrap_modal_size'],
           ))
         ->execute();
 
@@ -169,7 +192,7 @@ function splash_block_form_submit($form, &$form_state) {
  * Returns saved settings for a given block.
  */
 function _splash_block_get_settings($module, $delta) {
-  $query = db_query('SELECT module, delta, time, delay, size FROM {splash_block} WHERE module = :module AND delta = :delta',
+  $query = db_query('SELECT module, delta, time, delay, size, bootstrap_size FROM {splash_block} WHERE module = :module AND delta = :delta',
     array(
       ':module' => $module,
       ':delta' => $delta,
@@ -350,7 +373,7 @@ function _splash_block_test_installed($library, $name, $args) {
  * Implements hook_preprocess_block
  * This hook is typically called by a theme, but can be called by a module
  */
-function splash_block_preprocess_block(&$variables){
+function splash_block_preprocess_block(&$variables) {
   if ($variables['block']->region == 'splash') {
     switch (variable_get('splash_block_js', 'custom')) {
       case 'custom':
@@ -358,6 +381,11 @@ function splash_block_preprocess_block(&$variables){
         break;
       case 'bootstrap':
         $variables['theme_hook_suggestions'][] = 'splash_block_bootstrap';
+        $settings = _splash_block_get_settings($variables['elements']['#block']->module, $variables['elements']['#block']->delta);
+        $bootstrap_size = $settings->bootstrap_size;
+        if (!is_null($bootstrap_size) && $bootstrap_size != 'default') {
+          $variables['modal_size'] = $bootstrap_size;
+        }
         break;
     }
   }
