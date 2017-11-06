@@ -30,7 +30,7 @@ function _splash_block_config($form, &$form_state) {
     '#type' => 'radios',
     '#title' => t('Popup method'),
     '#options' => _splash_block_js_options(),
-    '#description' => t('Choose how javascript will load the splash/modal. <strong>Note:</strong> choose Bootstrap only if your theme will be loading the appropriate Bootstrap javascript files.'),
+    '#description' => t('Choose how javascript will load the splash/modal. <strong>Note:</strong> choose Bootstrap only if your theme will be loading the appropriate Bootstrap javascript files, including the modal script.'),
     '#default_value' => variable_get('splash_block_js', 'custom'),
   );
 
@@ -192,7 +192,7 @@ function splash_block_form_submit($form, &$form_state) {
  * Returns saved settings for a given block.
  */
 function _splash_block_get_settings($module, $delta) {
-  $query = db_query('SELECT module, delta, time, delay, size, bootstrap_size FROM {splash_block} WHERE module = :module AND delta = :delta',
+  $query = db_query('SELECT * FROM {splash_block} WHERE module = :module AND delta = :delta',
     array(
       ':module' => $module,
       ':delta' => $delta,
