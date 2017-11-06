@@ -28,16 +28,20 @@
                 // Bootstrap 2 or 3 js
                 case 'bootstrap':
                   var $modal = $(".splash-content.modal");
-                  $modal.modal();
-                  // can click in the modal content
-                  $('.modal-content').click(function(e){
-                    e.stopPropagation();
-                  });
+                  if (typeof $modal.modal == 'function') {
+                    $modal.modal();
+                    // can click in the modal content
+                    $('.modal-content').click(function(e){
+                      e.stopPropagation();
+                    });
 
-                  // due to the vertical centering CSS, capture events to close the modal
-                  $('.modal-dialog.vertical-align-center, .modal-content .close').click(function(){
-                    $modal.modal('hide');
-                  });
+                    // due to the vertical centering CSS, capture events to close the modal
+                    $('.modal-dialog.vertical-align-center, .modal-content .close').click(function(){
+                      $modal.modal('hide');
+                    });
+                  } else {
+                    console.log('Splash Block needs Bootstrap\'s modal script. The modal() function is not found.');
+                  }
                   break;
               }
 
