@@ -43,6 +43,7 @@ splashBlockSplash = (function($) {
     $modal.hide();
     $overlay.hide();
     $content.empty();
+    $('body').removeClass('splash-custom');
     $(window).unbind('resize.splashBlock');
   };
 

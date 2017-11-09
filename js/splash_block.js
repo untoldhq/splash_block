@@ -15,9 +15,12 @@
             var time = this.time;
             var delay = this.delay;
             var width = this.size + 'px';
+            var type = this.type;
+            var bannerPosition = this.banner_position;
+            var bannerSelector = this.banner_selector;
 
             setTimeout(function() {
-              switch (Drupal.settings.splashBlock.splash_block_js) {
+              switch (type) {
                 // Splash Block js
                 case 'custom':
                   $('#splash-block-overlay').show();
@@ -38,10 +41,18 @@
                     // due to the vertical centering CSS, capture events to close the modal
                     $('.modal-dialog.vertical-align-center, .modal-content .close').click(function(){
                       $modal.modal('hide');
+                      $('body').removeClass('splash-bootstrap');
                     });
                   } else {
                     console.log('Splash Block needs Bootstrap\'s modal script. The modal() function is not found.');
                   }
+                  break;
+                // Banner
+                case 'banner':
+                  splashBlockBanner.insert({
+                    bannerPosition: bannerPosition,
+                    bannerSelector: bannerSelector
+                  });
                   break;
               }
 
