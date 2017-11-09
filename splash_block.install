@@ -124,3 +124,34 @@ function splash_block_update_7101() {
   );
   db_add_field('splash_block', 'bootstrap_size', $spec);
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add splash_type to {splash_block} table.
+ */
+function splash_block_update_7102() {
+  $fields = array(
+    'type' => array(
+      'type' => 'varchar',
+      'length' => 16,
+      'description' => "Type of splash (custom, bootstrap, banner)",
+    ),
+    'banner_position'=> array(
+      'type' => 'varchar',
+      'length' => 16,
+      'description' => "Position of banner (above, below)",
+    ),
+    'banner_selector' => array(
+      'type' => 'varchar',
+      'length' => 255,
+      'description' => "jQuery selector for banner placement",
+    ),
+  );
+
+  foreach ($fields as $key => $field)  {
+    if (!db_field_exists('splash_block', $key)) {
+      db_add_field('splash_block', $key, $field);
+    }
+  }
+}
