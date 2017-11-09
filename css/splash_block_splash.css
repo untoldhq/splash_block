@@ -26,7 +26,7 @@
   padding: 10px;
 }
 
-.splash-block-close {
+.splash-block-close, .splash-block-banner-close {
   position: absolute;
   background: url(images/close.png) 0 0 no-repeat;
   width: 24px;
@@ -35,6 +35,10 @@
   text-indent: -9999px;
   top: -7px;
   right: -7px;
+}
+
+.splash-block-banner-close {
+  top: 5px;
 }
 
 .vertical-alignment-helper {
@@ -55,4 +59,8 @@
   height: inherit;
   /* To center horizontally */
   margin: 0 auto;
+}
+
+.splash-block-banner {
+  position: relative;
 }
