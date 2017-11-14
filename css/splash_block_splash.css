@@ -39,6 +39,7 @@
 
 .splash-block-banner-close {
   top: 5px;
+  right: 5px;
 }
 
 .vertical-alignment-helper {
@@ -61,6 +62,9 @@
   margin: 0 auto;
 }
 
+/* Set some defaults for the banner */
 .splash-block-banner {
   position: relative;
+  padding: 15px;
+  background-color: #eee;
 }
