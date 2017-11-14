@@ -47,6 +47,26 @@ function splash_block_schema() {
         'unsigned' => TRUE,
         'default' => 0,
       ),
+      'bootstrap_size' => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'description' => 'The Bootstrap class name for modal size',
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'description' => "Type of splash (custom, bootstrap, banner)",
+      ),
+      'banner_position'=> array(
+        'type' => 'varchar',
+        'length' => 16,
+        'description' => "Position of banner (above, below)",
+      ),
+      'banner_selector' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => "jQuery selector for banner placement",
+      ),
     ),
     'primary key' => array('module', 'delta'),
   );
@@ -101,51 +121,44 @@ function splash_block_requirements($phase) {
  * Add delay field to {splash_block} table.
  */
 function splash_block_update_7100() {
-  $spec = array(
-    'type' => 'int',
-    'description' => "The time delay in seconds after the page loads",
-    'not null' => TRUE,
-    'unsigned' => TRUE,
-    'default' => 0,
-  );
-  db_add_field('splash_block', 'delay', $spec);
+  if (!db_field_exists('splash_block', 'delay')) {
+    $spec = array(
+      'type' => 'int',
+      'description' => "The time delay in seconds after the page loads",
+      'not null' => TRUE,
+      'unsigned' => TRUE,
+      'default' => 0,
+    );
+    db_add_field('splash_block', 'delay', $spec);
+  }
 }
 
 /**
  * Implements hook_update_N().
  *
- * Add bootstrap_size to {splash_block} table.
+ * Add bootstrap_size, type, banner_position, banner_selector database fields.
  */
 function splash_block_update_7101() {
-  $spec = array(
-    'type' => 'varchar',
-    'length' => 16,
-    'description' => "The Bootstrap class name for modal size",
-  );
-  db_add_field('splash_block', 'bootstrap_size', $spec);
-}
-
-/**
- * Implements hook_update_N().
- *
- * Add splash_type to {splash_block} table.
- */
-function splash_block_update_7102() {
   $fields = array(
+    'bootstrap_size' => array(
+      'type' => 'varchar',
+      'length' => 16,
+      'description' => 'The Bootstrap class name for modal size',
+    ),
     'type' => array(
       'type' => 'varchar',
       'length' => 16,
-      'description' => "Type of splash (custom, bootstrap, banner)",
+      'description' => 'Type of splash (custom, bootstrap, banner)',
     ),
     'banner_position'=> array(
       'type' => 'varchar',
       'length' => 16,
-      'description' => "Position of banner (above, below)",
+      'description' => 'Position of banner (above, below)',
     ),
     'banner_selector' => array(
       'type' => 'varchar',
       'length' => 255,
-      'description' => "jQuery selector for banner placement",
+      'description' => 'jQuery selector for banner placement',
     ),
   );
 
@@ -153,5 +166,20 @@ function splash_block_update_7102() {
     if (!db_field_exists('splash_block', $key)) {
       db_add_field('splash_block', $key, $field);
     }
+  }
+}
+
+/**
+ * Implements hook_uninstall()
+ * Remove the variables created by this module.
+ */
+function splash_block_uninstall() {
+  $vars = array(
+    'splash_block_js',
+    'splash_block_banner_position',
+    'splash_block_banner_selector'
+  );
+  foreach ($vars as $var) {
+    variable_del($var);
   }
 }
