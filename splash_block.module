@@ -1,10 +1,62 @@
 <?php
 
 /**
+ * Implements hook_menu().
+ */
+function splash_block_menu() {
+  $items = array();
+
+  $items['admin/config/splash-block'] = array(
+    'title' => 'Splash Block settings',
+    'weight' => 1,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_splash_block_config'),
+    'access arguments' => array('administer splash blocks'),
+    'type' => MENU_NORMAL_ITEM
+  );
+
+  return $items;
+}
+
+function _splash_block_config($form, &$form_state) {
+  $form = array();
+
+  $form['splash_block_js'] = array(
+    '#type' => 'radios',
+    '#title' => t('Default method'),
+    '#options' => _splash_block_js_options(),
+    '#description' => t('Choose how javascript will load the splash/modal. <strong>Note:</strong> choose Bootstrap only if your theme will be loading the appropriate Bootstrap javascript files, including the modal script.'),
+    '#default_value' => variable_get('splash_block_js', 'custom'),
+  );
+
+  // Show form items when banner is selected.
+  $show_for_banner = array(
+    'visible' => array(
+      ':input[name="splash_block_js"]' => array('value' => 'banner'),
+    ),
+  );
+  $form['splash_block_banner_position'] = array(
+    '#type' => 'radios',
+    '#options' => _splash_block_position_options(),
+    '#title' => t('Position of banner'),
+    '#default_value' => variable_get('splash_block_banner_position', 'before'),
+    '#states' => $show_for_banner,
+  );
+  $form['splash_block_banner_selector'] = array(
+    '#type' => 'textfield',
+    '#title' => t('jQuery selector'),
+    '#default_value' => variable_get('splash_block_banner_selector', '.main-container'),
+    '#states' => $show_for_banner,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
  * @file
  * Splash Block module functionality.
  *
- * Contains the bulk of Splash Block functionality, including permissions, 
+ * Contains the bulk of Splash Block functionality, including permissions,
  * settings, generation, and display of Splash Blocks.
  */
 
@@ -67,12 +119,60 @@ function splash_block_form_alter(&$form, &$form_state, $form_id) {
       '#description' => t('Delay (in seconds) after the page loads.'),
       '#maxlength' => 255,
     );
-    $form['settings']['splash_block']['splash_size'] = array(
+    $form['settings']['splash_block']['splash_type'] = array(
+      '#type' => 'radios',
+      '#title' => t('Splash method'),
+      '#options' => _splash_block_js_options(),
+      '#description' => t('Choose how javascript will load the splash/modal. <strong>Note:</strong> choose Bootstrap only if your theme will be loading the appropriate Bootstrap javascript files, including the modal script.'),
+      '#default_value' => (isset($splash_block->type) && !is_null($splash_block->type)) ? $splash_block->type : variable_get('splash_block_js', 'custom'),
+    );
+    $form['settings']['splash_block']['configuration'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Configuration'),
+    );
+    // Show form items when custom is selected.
+    $form['settings']['splash_block']['configuration']['splash_size'] = array(
       '#type' => 'textfield',
       '#title' => t('Splash Width'),
-      '#default_value' => isset($splash_block->size) ? $splash_block->size : '450',
+      '#default_value' => (isset($splash_block->size) && !is_null($splash_block->size)) ? $splash_block->size : '450',
       '#description' => t('Width (in pixels) of the splash block.'),
       '#maxlength' => 255,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="splash_type"]' => array('value' => 'custom'),
+        ),
+      ),
+    );
+    // Show form items when bootstrap is selected.
+    $form['settings']['splash_block']['configuration']['bootstrap_modal_size'] = array(
+      '#type' => 'radios',
+      '#title' => t('Bootstrap modal size'),
+      '#options' => _splash_block_get_modal_options(),
+      '#default_value' => (isset($splash_block->bootstrap_size) && !is_null($splash_block->bootstrap_size)) ? $splash_block->bootstrap_size : 'default',
+      '#states' => array(
+        'visible' => array(
+          ':input[name="splash_type"]' => array('value' => 'bootstrap'),
+        ),
+      ),
+    );
+    // Show form items when banner is selected.
+    $show_for_banner = array(
+      'visible' => array(
+        ':input[name="splash_type"]' => array('value' => 'banner'),
+      ),
+    );
+    $form['settings']['splash_block']['configuration']['banner_position'] = array(
+      '#type' => 'radios',
+      '#options' => _splash_block_position_options(),
+      '#title' => t('Position of banner'),
+      '#default_value' => (isset($splash_block->banner_position) && !is_null($splash_block->banner_position)) ? $splash_block->banner_position : variable_get('splash_block_banner_position', 'before'),
+      '#states' => $show_for_banner,
+    );
+    $form['settings']['splash_block']['configuration']['banner_selector'] = array(
+      '#type' => 'textfield',
+      '#title' => t('jQuery selector'),
+      '#default_value' => (isset($splash_block->banner_selector) && !is_null($splash_block->banner_selector)) ? $splash_block->banner_selector : variable_get('splash_block_banner_position', '.main-container'),
+      '#states' => $show_for_banner,
     );
 
     $form['#validate'][] = 'splash_block_form_validate';
@@ -90,17 +190,19 @@ function splash_block_form_validate($form, &$form_state) {
   if (empty($form_state['values']['splash_delay']) && $form_state['values']['splash_delay'] != 0) {
     form_set_error('splash_delay', t("Please enter a value for your splash block's delay after page load."));
   }
-  if (empty($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t("Please enter a value for your splash block's width."));
+  if ($form_state['values']['splash_type'] == 'custom') {
+    if (empty($form_state['values']['splash_size'])) {
+      form_set_error('splash_size', t("Please enter a value for your splash block's width."));
+    }
+    if (!is_numeric($form_state['values']['splash_size'])) {
+      form_set_error('splash_size', t("Splash size must be numeric."));
+    }
   }
   if (!is_numeric($form_state['values']['splash_time'])) {
     form_set_error('splash_time', t("Time interval must be numeric."));
   }
   if (!is_numeric($form_state['values']['splash_delay'])) {
     form_set_error('splash_delay', t("Time delay must be numeric."));
-  }
-  if (!is_numeric($form_state['values']['splash_size'])) {
-    form_set_error('splash_size', t("Splash size must be numeric."));
   }
 }
 
@@ -110,13 +212,17 @@ function splash_block_form_validate($form, &$form_state) {
 function splash_block_form_submit($form, &$form_state) {
   if (($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') && user_access('administer blocks')) {
     // Only save if at least one field has changed.
-    if (($form['settings']['splash_block']['splash_time']['#default_value'] != $form_state['values']['splash_time']) || ($form['settings']['splash_block']['splash_size']['#default_value'] != $form_state['values']['splash_size']) || ($form['settings']['splash_block']['splash_delay']['#default_value'] != $form_state['values']['splash_delay'])) {
+    if (($form['settings']['splash_block']['splash_time']['#default_value'] != $form_state['values']['splash_time']) || ($form['settings']['splash_block']['splash_size']['#default_value'] != $form_state['values']['splash_size']) || ($form['settings']['splash_block']['splash_delay']['#default_value'] != $form_state['values']['splash_delay']) || ($form['settings']['splash_block']['bootstrap_modal_size']['#default_value'] != $form_state['values']['bootstrap_modal_size'])) {
       db_merge('splash_block')
         ->key(array('module' => $form_state['values']['module'], 'delta' => $form_state['values']['delta']))
         ->fields(array(
           'time' => $form_state['values']['splash_time'],
           'delay' => $form_state['values']['splash_delay'],
           'size' => $form_state['values']['splash_size'],
+          'bootstrap_size' => $form_state['values']['bootstrap_modal_size'],
+          'type' => $form_state['values']['splash_type'],
+          'banner_position' => $form_state['values']['banner_position'],
+          'banner_selector' => $form_state['values']['banner_selector'],
           ))
         ->execute();
 
@@ -132,7 +238,7 @@ function splash_block_form_submit($form, &$form_state) {
  * Returns saved settings for a given block.
  */
 function _splash_block_get_settings($module, $delta) {
-  $query = db_query('SELECT module, delta, time, delay, size FROM {splash_block} WHERE module = :module AND delta = :delta',
+  $query = db_query('SELECT * FROM {splash_block} WHERE module = :module AND delta = :delta',
     array(
       ':module' => $module,
       ':delta' => $delta,
@@ -144,12 +250,22 @@ function _splash_block_get_settings($module, $delta) {
 }
 
 /**
+ * Returns bootstrap modal size options
+ */
+function _splash_block_get_modal_options() {
+  return array(
+    'default' => 'Default',
+    'modal-sm' => 'Small modal',
+    'modal-lg' => 'Large modal',
+  );
+}
+
+/**
  * Implements hook_page_build().
  *
  * Displays any blocks in splash region as lightbox popups.
  */
 function splash_block_page_build(&$page) {
-
   if (!isset($page['splash'])) {
     return;
   }
@@ -168,6 +284,7 @@ function _splash_block_add_splashes($splash_region) {
   libraries_load('jstorage', 'minified');
 
   $splashes = array();
+  $splashes['types'] = array();
   $settings = array();
 
   $path = drupal_get_path('module', 'splash_block');
@@ -177,7 +294,7 @@ function _splash_block_add_splashes($splash_region) {
 
   $splashes['#attached']['css'][$path . '/css/splash_block_splash.css'] = $options;
 
-  $splashes['#markup'] = '<div id="splash-content">';
+  $splashes['#markup'] = '';
 
   foreach ($splash_region as $k => $splash) {
     if (isset($splash['#block'])) {
@@ -202,21 +319,33 @@ function _splash_block_add_splashes($splash_region) {
         $settings[$k]->size = 450;
       }
       $settings[$k]->id = 'block-' . str_replace('_', '-', $k);
+      if (!in_array('splash-' . $settings[$k]->type, $splashes['types'])) {
+        $splashes['types'][] = 'splash-' . $settings[$k]->type;
+      }
 
       // Add block markup.
       $splashes['#markup'] .= drupal_render($splash);
     }
   }
 
-  $splashes['#markup'] .= '</div>';
-
   $js = array();
 
-  // Add splash_block lightbox.
-  $js[] = array(
-    'data' => $path . '/js/splash_block_splash.js',
-    'type' => 'file',
-  );
+  // Add splash_block lightbox if custom is chosen.
+  $types = $splashes['types'];
+  if (in_array('splash-custom', $types)) {
+    $js[] = array(
+      'data' => $path . '/js/splash_block_splash.js',
+      'type' => 'file',
+      'scope' => 'footer',
+    );
+  }
+  if (in_array('splash-banner', $types)) {
+    $js[] = array(
+      'data' => $path . '/js/splash_block_banner.js',
+      'type' => 'file',
+      'scope' => 'footer',
+    );
+  }
 
   // Send settings to Drupal js.
   $js[] = array(
@@ -228,11 +357,33 @@ function _splash_block_add_splashes($splash_region) {
   $js[] = array(
     'data' => $path . '/js/splash_block.js',
     'type' => 'file',
+    'scope' => 'footer',
   );
 
   $splashes['#attached']['js'] = $js;
 
   return $splashes;
+}
+
+/**
+ * Used to define the options for the settings page
+ */
+function _splash_block_js_options() {
+  return array(
+    'custom' => t('Splash Block javascript popup'),
+    'bootstrap' => t('Bootstrap 2/3 modal'),
+    'banner' => t('Splash Block banner that can be dismissed'),
+  );
+}
+
+/**
+ * Used to define options for positioning banner
+ */
+function _splash_block_position_options() {
+  return array(
+    'before' => 'Before selector',
+    'after' => 'After selector',
+  );
 }
 
 /**
@@ -293,5 +444,76 @@ function _splash_block_test_installed($library, $name, $args) {
   }
   else {
     return TRUE;
+  }
+}
+
+/**
+ * Implements hook_preprocess_block
+ * This hook is typically called by a theme, but can be called by a module
+ */
+function splash_block_preprocess_block(&$variables) {
+  if ($variables['block']->region == 'splash') {
+    $settings = _splash_block_get_settings($variables['elements']['#block']->module, $variables['elements']['#block']->delta);
+    switch ($settings->type) {
+      case 'custom':
+        $variables['theme_hook_suggestions'][] = 'splash_block_custom';
+        break;
+      case 'bootstrap':
+        $variables['theme_hook_suggestions'][] = 'splash_block_bootstrap';
+        $bootstrap_size = $settings->bootstrap_size;
+        if (!is_null($bootstrap_size) && $bootstrap_size != 'default') {
+          $variables['modal_size'] = $bootstrap_size;
+        }
+        break;
+      case 'banner':
+        $variables['theme_hook_suggestions'][] = 'splash_block_banner';
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function splash_block_theme($existing, $type, $theme, $path) {
+  return array(
+    'splash_block_custom' => array(
+      'template' => 'templates/splash-block-custom',
+      'variables' => array(),
+    ),
+    'splash_block_bootstrap' => array(
+      'template' => 'templates/splash-block-bootstrap',
+      'variables' => array(),
+    ),
+    'splash_block_banner' => array(
+      'template' => 'templates/splash-block-banner',
+      'variables' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ * We use this so the template(s) located in this module are loaded
+ */
+function splash_block_theme_registry_alter(&$theme_registry) {
+  $module_path = drupal_get_path('module', 'splash_block');
+  $template_file_objects = drupal_find_theme_templates($theme_registry, '.tpl.php', $module_path);
+  foreach ($template_file_objects as $key => $template_file_object) {
+    if (!isset($theme_registry[$key]['theme path']) || !preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
+      $theme_registry[$key]['theme path'] = $module_path;
+      $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
+      $theme_registry[$key]['type'] = 'module';
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ * Used to add classes to the body tag for the type of Splash(es).
+ */
+function splash_block_preprocess_html(&$vars) {
+  if (isset($vars['page']['page_bottom']['splash']) && !empty($vars['page']['page_bottom']['splash']['types'])) {
+    $vars['classes_array'] = array_merge($vars['page']['page_bottom']['splash']['types'], $vars['classes_array']);
   }
 }

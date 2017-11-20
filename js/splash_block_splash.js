@@ -7,38 +7,33 @@ splashBlockSplash = (function($) {
   $close;
 
   // Generate the HTML and add it to the document.
-  $overlay = $('<div id="splash-block-overlay"></div>');
-  $modal = $('<div id="splash-block-modal"></div>');
-  $content = $('<div id="splash-block-splash"></div>');
-  $close = $('<a id="splash-block-close" href="#">close</a>');
+  $overlay = $('.splash-block-overlay');
+  $modal = $('.splash-block-modal');
+  $content = $('.splash-block-splash');
+  $close = $('.splash-block-close');
 
   // Center the modal in the viewport.
-  method.center = function () {
+  method.center = function($el) {
     var top, left;
 
     top = Math.max($(window).height() - $modal.outerHeight(), 0) / 2;
     left = Math.max($(window).width() - $modal.outerWidth(), 0) / 2;
 
-    $modal.css({
-      top: top + $(window).scrollTop(),
-      left: left + $(window).scrollLeft()
+    $el.css({
+      top:top + $(window).scrollTop(),
+      left:left + $(window).scrollLeft()
     });
   };
 
   // Open the modal.
   method.open = function(settings) {
-    $('body').append($overlay, $modal);
-    $modal.append($content, $close);
-
-    $content.empty().append(settings.content).html();
-
     $modal.css({
       width: settings.width || 'auto',
       height: settings.height || 'auto'
     });
 
-    method.center();
-    $(window).bind('resize.splashBlock', method.center);
+    method.center($modal);
+    $(window).bind('resize.splashBlock', method.center($modal));
     $modal.show();
     $overlay.show();
   };
@@ -48,6 +43,7 @@ splashBlockSplash = (function($) {
     $modal.hide();
     $overlay.hide();
     $content.empty();
+    $('body').removeClass('splash-custom');
     $(window).unbind('resize.splashBlock');
   };
 
